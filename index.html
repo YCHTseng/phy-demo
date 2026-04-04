@@ -210,17 +210,20 @@
         return;
       }
       previewArea.innerHTML = "<div class='preview-loading'><span class='spinner'></span>載入中…</div>";
-      const api = "https://api.rss2json.com/v1/api.json?count=8&rss_url=" + encodeURIComponent(rssUrl);
-      fetch(api)
+      const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(rssUrl);
+      fetch(proxy)
         .then(r => r.json())
         .then(data => {
-          if (data.status !== "ok" || !data.items?.length) {
-            previewArea.innerHTML = "<p class='preview-error'>暫時無法載入標題，請直接開啟網站。</p>";
-            return;
-          }
-          const html = "<ul class='headline-list'>" + data.items.slice(0, 8).map(item => {
-            const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString("zh-TW") : "";
-            return "<li class='headline-item'><a href='" + esc(item.link) + "' target='_blank' rel='noopener noreferrer'>" + esc(item.title) + "</a>" + (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</li>";
+          if (!data.contents) throw new Error("empty");
+          const xml = new DOMParser().parseFromString(data.contents, "text/xml");
+          const items = Array.from(xml.querySelectorAll("item")).slice(0, 8);
+          if (!items.length) throw new Error("no items");
+          const html = "<ul class='headline-list'>" + items.map(item => {
+            const title = item.querySelector("title")?.textContent ?? "";
+            const link  = item.querySelector("link")?.textContent ?? "#";
+            const pub   = item.querySelector("pubDate")?.textContent;
+            const date  = pub ? new Date(pub).toLocaleDateString("zh-TW") : "";
+            return "<li class='headline-item'><a href='" + esc(link.trim()) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a>" + (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</li>";
           }).join("") + "</ul>";
           previewArea.innerHTML = html;
         })
