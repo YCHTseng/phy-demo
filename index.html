@@ -202,37 +202,46 @@
 
     const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 
-    const loadPreview = (rssUrl, topicName, siteName) => {
+    const loadPreview = (pageUrl, selector, topicName, siteName) => {
       previewCard.style.display = "";
       previewLabel.textContent = siteName + " ▸ " + topicName + "　標題預覽";
-      if (!rssUrl) {
+      if (!selector) {
         previewArea.innerHTML = "<p class='preview-empty'>此分類暫不支援標題預覽。</p>";
         return;
       }
       previewArea.innerHTML = "<div class='preview-loading'><span class='spinner'></span>載入中…</div>";
-      const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(rssUrl);
+      const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(pageUrl);
       fetch(proxy)
         .then(r => r.json())
         .then(data => {
           if (!data.contents) throw new Error("empty");
-          const xml = new DOMParser().parseFromString(data.contents, "text/xml");
-          const items = Array.from(xml.querySelectorAll("item")).slice(0, 8);
-          if (!items.length) throw new Error("no items");
-          const html = "<ul class='headline-list'>" + items.map(item => {
-            const title = item.querySelector("title")?.textContent ?? "";
-            const link  = item.querySelector("link")?.textContent ?? "#";
-            const pub   = item.querySelector("pubDate")?.textContent;
-            const date  = pub ? new Date(pub).toLocaleDateString("zh-TW") : "";
-            return "<li class='headline-item'><a href='" + esc(link.trim()) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a>" + (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</li>";
-          }).join("") + "</ul>";
-          previewArea.innerHTML = html;
+          const doc = new DOMParser().parseFromString(data.contents, "text/html");
+          // 加入 base 解析相對路徑
+          const base = doc.createElement("base"); base.href = pageUrl; doc.head.prepend(base);
+          const links = Array.from(doc.querySelectorAll(selector))
+            .filter(a => {
+              const t = a.textContent.trim();
+              const h = a.getAttribute("href") || "";
+              return t.length > 4 && !h.startsWith("javascript") && h !== "#";
+            })
+            .slice(0, 8);
+          if (!links.length) throw new Error("no items");
+          const seen = new Set();
+          const html = "<ul class='headline-list'>" + links.map(a => {
+            const title = a.textContent.trim();
+            if (seen.has(title)) return "";
+            seen.add(title);
+            const href = a.href || a.getAttribute("href") || "#";
+            return "<li class='headline-item'><a href='" + esc(href) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a></li>";
+          }).filter(Boolean).join("") + "</ul>";
+          previewArea.innerHTML = html || "<p class='preview-error'>暫時無法載入標題，請直接開啟網站。</p>";
         })
         .catch(() => {
           previewArea.innerHTML = "<p class='preview-error'>暫時無法載入標題，請直接開啟網站。</p>";
         });
     };
 
-    const activateChip = (chip, url, topicName, siteName, rssUrl) => {
+    const activateChip = (chip, url, topicName, siteName, selector) => {
       if (activeChip) activeChip.classList.remove("active");
       chip.classList.add("active");
       activeChip = chip;
@@ -240,7 +249,7 @@
       openButton.disabled = false;
       copyButton.disabled = false;
       setStatus("已選取：" + siteName + " ▸ " + topicName, "is-success");
-      loadPreview(rssUrl, topicName, siteName);
+      loadPreview(url, selector, topicName, siteName);
     };
 
     const renderTopics = (siteId) => {
@@ -260,7 +269,7 @@
       site.topics.forEach(t => {
         const chip = document.createElement("button");
         chip.type = "button"; chip.className = "chip"; chip.textContent = t.name;
-        chip.addEventListener("click", () => activateChip(chip, t.url, t.name, site.name, t.rss));
+        chip.addEventListener("click", () => activateChip(chip, t.url, t.name, site.name, t.selector));
         topicBar.appendChild(chip);
       });
       // 重繪詳細表格
@@ -302,7 +311,7 @@
       });
       openButton.disabled = false; copyButton.disabled = false;
       setStatus("已選取：" + site.name + " ▸ " + (topic?.name ?? url), "is-success");
-      loadPreview(topic?.rss ?? null, topic?.name ?? url, site.name);
+      loadPreview(url, topic?.selector ?? null, topic?.name ?? url, site.name);
     });
 
     openButton.addEventListener("click", () => {
