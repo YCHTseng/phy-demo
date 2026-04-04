@@ -216,7 +216,7 @@
         .then(data => {
           if (!data.contents) throw new Error("empty");
           const xml = new DOMParser().parseFromString(data.contents, "text/xml");
-          const items = Array.from(xml.querySelectorAll("item")).slice(0, 8);
+          const items = Array.from(xml.querySelectorAll("item")).slice(0, 4);
           if (!items.length) throw new Error("no items");
           const html = "<ul class='headline-list'>" + items.map(item => {
             const title = item.querySelector("title")?.textContent ?? "";
