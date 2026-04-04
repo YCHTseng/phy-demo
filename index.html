@@ -153,32 +153,32 @@
       udn: {
         name: "聯合新聞網",
         topics: [
-          { name: "要聞", url: "https://udn.com/news/cate/2/6638", selector: "h2 a, h3 a" },
-          { name: "娛樂", url: "https://stars.udn.com/", selector: "h2 a, h3 a" },
-          { name: "運動", url: "https://udn.com/news/cate/2/7227", selector: "h2 a, h3 a" },
-          { name: "全球", url: "https://udn.com/news/cate/2/7225", selector: "h2 a, h3 a" },
-          { name: "社會", url: "https://udn.com/news/cate/2/6639", selector: "h2 a, h3 a" },
-          { name: "地方", url: "https://udn.com/news/cate/2/6641", selector: "h2 a, h3 a" }
+          { name: "要聞", url: "https://udn.com/news/cate/2/6638", rss: "https://udn.com/rssfeed/news/2/6638?ch=news" },
+          { name: "娛樂", url: "https://stars.udn.com/", rss: null },
+          { name: "運動", url: "https://udn.com/news/cate/2/7227", rss: "https://udn.com/rssfeed/news/2/7227?ch=news" },
+          { name: "全球", url: "https://udn.com/news/cate/2/7225", rss: "https://udn.com/rssfeed/news/2/7225?ch=news" },
+          { name: "社會", url: "https://udn.com/news/cate/2/6639", rss: "https://udn.com/rssfeed/news/2/6639?ch=news" },
+          { name: "地方", url: "https://udn.com/news/cate/2/6641", rss: "https://udn.com/rssfeed/news/2/6641?ch=news" }
         ]
       },
       yahoo: {
         name: "Yahoo",
         topics: [
-          { name: "焦點", url: "https://tw.news.yahoo.com/", selector: "h3 a" },
-          { name: "運動", url: "https://tw.sports.yahoo.com/", selector: "h3 a" },
-          { name: "娛樂", url: "https://tw.news.yahoo.com/topic/entertainment", selector: "h3 a" },
-          { name: "財經", url: "https://tw.stock.yahoo.com/", selector: "h3 a, h2 a" },
-          { name: "生活", url: "https://tw.news.yahoo.com/topic/health", selector: "h3 a" }
+          { name: "焦點", url: "https://tw.news.yahoo.com/", rss: "https://tw.news.yahoo.com/rss/" },
+          { name: "運動", url: "https://tw.sports.yahoo.com/", rss: "https://tw.sports.yahoo.com/rss/" },
+          { name: "娛樂", url: "https://tw.news.yahoo.com/topic/entertainment", rss: null },
+          { name: "財經", url: "https://tw.stock.yahoo.com/", rss: null },
+          { name: "生活", url: "https://tw.news.yahoo.com/topic/health", rss: null }
         ]
       },
       twse: {
         name: "證交所",
         topics: [
-          { name: "關於證交所", url: "https://www.twse.com.tw/zh/about/company/welcome.html", selector: null },
-          { name: "交易資訊",   url: "https://www.twse.com.tw/zh/trading/historical/mi-index.html", selector: null },
-          { name: "指數資訊",   url: "https://www.twse.com.tw/zh/indices/indices/series.html", selector: null },
-          { name: "上市公司",   url: "https://www.twse.com.tw/zh/listed/profile/company.html", selector: null },
-          { name: "產品與服務", url: "https://www.twse.com.tw/zh/products/securities/stocks.html", selector: null }
+          { name: "關於證交所", url: "https://www.twse.com.tw/zh/about/company/welcome.html", rss: null },
+          { name: "交易資訊",   url: "https://www.twse.com.tw/zh/trading/historical/mi-index.html", rss: null },
+          { name: "指數資訊",   url: "https://www.twse.com.tw/zh/indices/indices/series.html", rss: null },
+          { name: "上市公司",   url: "https://www.twse.com.tw/zh/listed/profile/company.html", rss: null },
+          { name: "產品與服務", url: "https://www.twse.com.tw/zh/products/securities/stocks.html", rss: null }
         ]
       }
     };
