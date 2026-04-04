@@ -84,6 +84,18 @@
     .topic-table td a:hover { text-decoration: underline; }
     .t-tag { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--tag-bg); border: 1px solid var(--tag-border); font-size: 12px; font-weight: 700; color: var(--accent); }
     .placeholder-text { color: var(--text-soft); font-size: 14px; padding: 12px 0; margin: 0; }
+    /* 標題預覽 */
+    .preview-loading { color: var(--text-soft); font-size: 14px; padding: 8px 0; display: flex; align-items: center; gap: 10px; }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(13,110,110,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .headline-list { list-style: none; margin: 0; padding: 0; }
+    .headline-item { padding: 9px 0; border-top: 1px solid rgba(78,93,117,0.08); font-size: 14px; line-height: 1.55; }
+    .headline-item:first-child { border-top: none; }
+    .headline-item a { color: var(--text-main); text-decoration: none; }
+    .headline-item a:hover { color: var(--accent); text-decoration: underline; }
+    .headline-meta { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+    .preview-empty { color: var(--text-soft); font-size: 14px; padding: 8px 0; margin: 0; }
+    .preview-error  { color: #9a5a00; font-size: 14px; padding: 8px 0; margin: 0; }
     @media (max-width: 560px) { .select-row { grid-template-columns: 1fr; } .shell { padding: 22px; } }
   </style>
 </head>
@@ -129,6 +141,11 @@
           <p class="placeholder-text">請先從上方選擇網站，即可看到各主題連結。</p>
         </div>
       </div>
+      <!-- 標題預覽 -->
+      <div class="card" id="preview-card" style="display:none">
+        <label id="preview-label">標題預覽</label>
+        <div id="preview-area"></div>
+      </div>
     </section>
   </main>
   <script>
@@ -136,32 +153,32 @@
       udn: {
         name: "聯合新聞網",
         topics: [
-          { name: "要聞", url: "https://udn.com/news/cate/2/6638" },
-          { name: "娛樂", url: "https://stars.udn.com/" },
-          { name: "運動", url: "https://udn.com/news/cate/2/7227" },
-          { name: "全球", url: "https://udn.com/news/cate/2/7225" },
-          { name: "社會", url: "https://udn.com/news/cate/2/6639" },
-          { name: "地方", url: "https://udn.com/news/cate/2/6641" }
+          { name: "要聞", url: "https://udn.com/news/cate/2/6638", rss: "https://udn.com/rssfeed/news/2/6638?ch=news" },
+          { name: "娛樂", url: "https://stars.udn.com/", rss: null },
+          { name: "運動", url: "https://udn.com/news/cate/2/7227", rss: "https://udn.com/rssfeed/news/2/7227?ch=news" },
+          { name: "全球", url: "https://udn.com/news/cate/2/7225", rss: "https://udn.com/rssfeed/news/2/7225?ch=news" },
+          { name: "社會", url: "https://udn.com/news/cate/2/6639", rss: "https://udn.com/rssfeed/news/2/6639?ch=news" },
+          { name: "地方", url: "https://udn.com/news/cate/2/6641", rss: "https://udn.com/rssfeed/news/2/6641?ch=news" }
         ]
       },
       yahoo: {
         name: "Yahoo",
         topics: [
-          { name: "焦點", url: "https://tw.news.yahoo.com/" },
-          { name: "運動", url: "https://tw.sports.yahoo.com/" },
-          { name: "娛樂", url: "https://tw.news.yahoo.com/topic/entertainment" },
-          { name: "財經", url: "https://tw.stock.yahoo.com/" },
-          { name: "生活", url: "https://tw.news.yahoo.com/topic/health" }
+          { name: "焦點", url: "https://tw.news.yahoo.com/", rss: "https://tw.news.yahoo.com/rss/" },
+          { name: "運動", url: "https://tw.sports.yahoo.com/", rss: "https://tw.sports.yahoo.com/rss/" },
+          { name: "娛樂", url: "https://tw.news.yahoo.com/topic/entertainment", rss: null },
+          { name: "財經", url: "https://tw.stock.yahoo.com/", rss: null },
+          { name: "生活", url: "https://tw.news.yahoo.com/topic/health", rss: null }
         ]
       },
       twse: {
         name: "證交所",
         topics: [
-          { name: "關於證交所", url: "https://www.twse.com.tw/zh/about/company/welcome.html" },
-          { name: "交易資訊",   url: "https://www.twse.com.tw/zh/trading/historical/mi-index.html" },
-          { name: "指數資訊",   url: "https://www.twse.com.tw/zh/indices/indices/series.html" },
-          { name: "上市公司",   url: "https://www.twse.com.tw/zh/listed/profile/company.html" },
-          { name: "產品與服務", url: "https://www.twse.com.tw/zh/products/securities/stocks.html" }
+          { name: "關於證交所", url: "https://www.twse.com.tw/zh/about/company/welcome.html", rss: null },
+          { name: "交易資訊",   url: "https://www.twse.com.tw/zh/trading/historical/mi-index.html", rss: null },
+          { name: "指數資訊",   url: "https://www.twse.com.tw/zh/indices/indices/series.html", rss: null },
+          { name: "上市公司",   url: "https://www.twse.com.tw/zh/listed/profile/company.html", rss: null },
+          { name: "產品與服務", url: "https://www.twse.com.tw/zh/products/securities/stocks.html", rss: null }
         ]
       }
     };
@@ -172,7 +189,10 @@
     const openButton  = document.getElementById("open-button");
     const copyButton  = document.getElementById("copy-button");
     const statusEl    = document.getElementById("status");
-    const detailArea  = document.getElementById("detail-area");
+    const detailArea   = document.getElementById("detail-area");
+    const previewCard  = document.getElementById("preview-card");
+    const previewArea  = document.getElementById("preview-area");
+    const previewLabel = document.getElementById("preview-label");
     let activeChip = null;
 
     const setStatus = (msg, kind = "") => {
@@ -180,7 +200,36 @@
       statusEl.className = kind ? "status " + kind : "status";
     };
 
-    const activateChip = (chip, url, topicName, siteName) => {
+    const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+    const loadPreview = (rssUrl, topicName, siteName) => {
+      previewCard.style.display = "";
+      previewLabel.textContent = siteName + " ▸ " + topicName + "　標題預覽";
+      if (!rssUrl) {
+        previewArea.innerHTML = "<p class='preview-empty'>此分類暫不支援標題預覽。</p>";
+        return;
+      }
+      previewArea.innerHTML = "<div class='preview-loading'><span class='spinner'></span>載入中…</div>";
+      const api = "https://api.rss2json.com/v1/api.json?count=8&rss_url=" + encodeURIComponent(rssUrl);
+      fetch(api)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status !== "ok" || !data.items?.length) {
+            previewArea.innerHTML = "<p class='preview-error'>暫時無法載入標題，請直接開啟網站。</p>";
+            return;
+          }
+          const html = "<ul class='headline-list'>" + data.items.slice(0, 8).map(item => {
+            const date = item.pubDate ? new Date(item.pubDate).toLocaleDateString("zh-TW") : "";
+            return "<li class='headline-item'><a href='" + esc(item.link) + "' target='_blank' rel='noopener noreferrer'>" + esc(item.title) + "</a>" + (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</li>";
+          }).join("") + "</ul>";
+          previewArea.innerHTML = html;
+        })
+        .catch(() => {
+          previewArea.innerHTML = "<p class='preview-error'>暫時無法載入標題，請直接開啟網站。</p>";
+        });
+    };
+
+    const activateChip = (chip, url, topicName, siteName, rssUrl) => {
       if (activeChip) activeChip.classList.remove("active");
       chip.classList.add("active");
       activeChip = chip;
@@ -188,11 +237,13 @@
       openButton.disabled = false;
       copyButton.disabled = false;
       setStatus("已選取：" + siteName + " ▸ " + topicName, "is-success");
+      loadPreview(rssUrl, topicName, siteName);
     };
 
     const renderTopics = (siteId) => {
       const site = SITES[siteId];
       activeChip = null;
+      previewCard.style.display = "none";
       // 更新主題下拉
       topicSelect.innerHTML = "<option value=''>— 請選擇主題 —</option>";
       site.topics.forEach(t => {
@@ -206,7 +257,7 @@
       site.topics.forEach(t => {
         const chip = document.createElement("button");
         chip.type = "button"; chip.className = "chip"; chip.textContent = t.name;
-        chip.addEventListener("click", () => activateChip(chip, t.url, t.name, site.name));
+        chip.addEventListener("click", () => activateChip(chip, t.url, t.name, site.name, t.rss));
         topicBar.appendChild(chip);
       });
       // 重繪詳細表格
@@ -229,6 +280,7 @@
         topicBar.innerHTML = "<span class='topic-bar-label'>選擇網站後，可快速點選主題</span>";
         detailArea.innerHTML = "<p class='placeholder-text'>請先從上方選擇網站，即可看到各主題連結。</p>";
         openButton.disabled = true; copyButton.disabled = true;
+        previewCard.style.display = "none";
         setStatus("尚未選取。"); return;
       }
       renderTopics(siteId);
@@ -247,6 +299,7 @@
       });
       openButton.disabled = false; copyButton.disabled = false;
       setStatus("已選取：" + site.name + " ▸ " + (topic?.name ?? url), "is-success");
+      loadPreview(topic?.rss ?? null, topic?.name ?? url, site.name);
     });
 
     openButton.addEventListener("click", () => {
