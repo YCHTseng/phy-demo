@@ -112,8 +112,8 @@
             <label for="site-select">① 選擇網站</label>
             <select id="site-select">
               <option value="">— 請選擇網站 —</option>
-              <option value="udn">聯合新聞網</option>
-              <option value="yahoo">Yahoo</option>
+              <option value="cna">中央社</option>
+              <option value="ltn">自由時報</option>
               <option value="twse">證交所</option>
             </select>
           </div>
@@ -150,25 +150,27 @@
   </main>
   <script>
     const SITES = {
-      udn: {
-        name: "聯合新聞網",
+      cna: {
+        name: "中央社",
         topics: [
-          { name: "要聞", url: "https://udn.com/news/cate/2/6638", rss: "https://udn.com/rssfeed/news/2/6638?ch=news" },
-          { name: "娛樂", url: "https://stars.udn.com/", rss: null },
-          { name: "運動", url: "https://udn.com/news/cate/2/7227", rss: "https://udn.com/rssfeed/news/2/7227?ch=news" },
-          { name: "全球", url: "https://udn.com/news/cate/2/7225", rss: "https://udn.com/rssfeed/news/2/7225?ch=news" },
-          { name: "社會", url: "https://udn.com/news/cate/2/6639", rss: "https://udn.com/rssfeed/news/2/6639?ch=news" },
-          { name: "地方", url: "https://udn.com/news/cate/2/6641", rss: "https://udn.com/rssfeed/news/2/6641?ch=news" }
+          { name: "即時", url: "https://www.cna.com.tw/list/aall.aspx",       rss: "https://www.cna.com.tw/rss/asapnews.aspx" },
+          { name: "焦點", url: "https://www.cna.com.tw/list/aipl.aspx",       rss: "https://www.cna.com.tw/rss/politics.aspx" },
+          { name: "財經", url: "https://www.cna.com.tw/list/aie.aspx",        rss: "https://www.cna.com.tw/rss/biz-finance.aspx" },
+          { name: "國際", url: "https://www.cna.com.tw/list/aopl.aspx",       rss: "https://www.cna.com.tw/rss/international.aspx" },
+          { name: "娛樂", url: "https://www.cna.com.tw/list/ahel.aspx",       rss: "https://www.cna.com.tw/rss/amuse.aspx" },
+          { name: "體育", url: "https://www.cna.com.tw/list/aspt.aspx",       rss: "https://www.cna.com.tw/rss/sports.aspx" },
+          { name: "社會", url: "https://www.cna.com.tw/list/asoc.aspx",       rss: "https://www.cna.com.tw/rss/society.aspx" }
         ]
       },
-      yahoo: {
-        name: "Yahoo",
+      ltn: {
+        name: "自由時報",
         topics: [
-          { name: "焦點", url: "https://tw.news.yahoo.com/", rss: "https://tw.news.yahoo.com/rss/" },
-          { name: "運動", url: "https://tw.sports.yahoo.com/", rss: "https://tw.sports.yahoo.com/rss/" },
-          { name: "娛樂", url: "https://tw.news.yahoo.com/topic/entertainment", rss: null },
-          { name: "財經", url: "https://tw.stock.yahoo.com/", rss: null },
-          { name: "生活", url: "https://tw.news.yahoo.com/topic/health", rss: null }
+          { name: "即時",   url: "https://news.ltn.com.tw/list/breakingnews",          rss: "https://rss.ltn.com.tw/rss/news.xml" },
+          { name: "政治",   url: "https://news.ltn.com.tw/list/breakingnews/politics", rss: "https://rss.ltn.com.tw/rss/politics.xml" },
+          { name: "社會",   url: "https://news.ltn.com.tw/list/breakingnews/society",  rss: "https://rss.ltn.com.tw/rss/society.xml" },
+          { name: "財經",   url: "https://money.ltn.com.tw/",                          rss: "https://rss.ltn.com.tw/rss/business.xml" },
+          { name: "娛樂",   url: "https://ent.ltn.com.tw/",                            rss: "https://rss.ltn.com.tw/rss/entertainment.xml" },
+          { name: "體育",   url: "https://sports.ltn.com.tw/",                         rss: "https://rss.ltn.com.tw/rss/sports.xml" }
         ]
       },
       twse: {
@@ -222,8 +224,9 @@
             const title = item.querySelector("title")?.textContent ?? "";
             const link  = item.querySelector("link")?.nextSibling?.nodeValue?.trim()
                        ?? item.querySelector("link")?.textContent?.trim() ?? "#";
-            const pub   = item.querySelector("pubDate")?.textContent;
-            const date  = pub ? new Date(pub).toLocaleDateString("zh-TW") : "";
+            const pub   = item.querySelector("pubDate")?.textContent?.trim();
+            const _d    = pub ? new Date(pub) : null;
+            const date  = (_d && !isNaN(_d) && _d.getFullYear() > 2000) ? _d.toLocaleDateString("zh-TW") : "";
             return "<li class='headline-item'><a href='" + esc(link) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a>" +
               (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</li>";
           }).join("") + "</ul>";
