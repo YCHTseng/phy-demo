@@ -90,11 +90,13 @@
     .spinner { width: 16px; height: 16px; border: 2px solid rgba(13,110,110,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .headline-list { list-style: none; margin: 0; padding: 0; }
-    .headline-item { padding: 9px 0; border-top: 1px solid rgba(78,93,117,0.08); font-size: 14px; line-height: 1.55; }
-    .headline-item:first-child { border-top: none; }
+    .headline-item { padding: 10px 0; border-top: 1px solid rgba(78,93,117,0.08); font-size: 14px; line-height: 1.55; display: flex; gap: 12px; align-items: flex-start; }
+    .headline-item:first-child { border-top: none; padding-top: 4px; }
+    .headline-cover { width: 90px; height: 64px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: rgba(78,93,117,0.07); }
+    .headline-text { flex: 1; min-width: 0; }
     .headline-item a { color: var(--text-main); text-decoration: none; }
     .headline-item a:hover { color: var(--accent); text-decoration: underline; }
-    .headline-meta { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+    .headline-meta { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
     .preview-empty { color: var(--text-soft); font-size: 14px; padding: 8px 0; margin: 0; }
     .preview-error  { color: #9a5a00; font-size: 14px; padding: 8px 0; margin: 0; }
     @media (max-width: 560px) { .select-row { grid-template-columns: 1fr; } .shell { padding: 22px; } }
@@ -224,8 +226,10 @@
             const pub   = item.pubDate;
             const _d    = pub ? new Date(pub) : null;
             const date  = (_d && !isNaN(_d) && _d.getFullYear() > 2000) ? _d.toLocaleDateString("zh-TW") : "";
-            return "<li class='headline-item'><a href='" + esc(link) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a>" +
-              (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</li>";
+            const thumb = item.thumbnail || (item.enclosure && item.enclosure.link && (item.enclosure.type || "").startsWith("image") ? item.enclosure.link : "");
+            const imgHtml = thumb ? "<img class='headline-cover' src='" + esc(thumb) + "' alt='' loading='lazy' onerror=\"this.style.display='none\">" : "";
+            return "<li class='headline-item'>" + imgHtml + "<div class='headline-text'><a href='" + esc(link) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a>" +
+              (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</div></li>";
           }).join("") + "</ul>";
           previewArea.innerHTML = html;
         })
