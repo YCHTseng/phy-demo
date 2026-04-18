@@ -226,8 +226,8 @@
             const pub   = item.pubDate;
             const _d    = pub ? new Date(pub) : null;
             const date  = (_d && !isNaN(_d) && _d.getFullYear() > 2000) ? _d.toLocaleDateString("zh-TW") : "";
-            const isImgUrl = s => /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)/i.test(s);
-            const thumb = (item.content && isImgUrl(item.content) ? item.content : "") || item.thumbnail || (item.enclosure && item.enclosure.link && (item.enclosure.type || "").startsWith("image") ? item.enclosure.link : "");
+            const isImgUrl = s => /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)/i.test(s) || /\/\/s\.yimg\.com\//i.test(s);
+            const thumb = (item.content && isImgUrl(item.content) ? item.content : "") || (item.thumbnail && isImgUrl(item.thumbnail) ? item.thumbnail : "") || (item.enclosure && item.enclosure.link && (item.enclosure.type || "").startsWith("image") ? item.enclosure.link : "");
             const imgHtml = thumb ? "<img class='headline-cover' src='" + esc(thumb) + "' alt='' loading='lazy' onerror=\"this.style.display='none'\">" : "";
             return "<li class='headline-item'>" + imgHtml + "<div class='headline-text'><a href='" + esc(link) + "' target='_blank' rel='noopener noreferrer'>" + esc(title) + "</a>" +
               (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</div></li>";
