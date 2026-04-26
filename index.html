@@ -34,7 +34,7 @@
       margin: 0; min-height: 100vh;
       font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
       color: var(--text-main);
-      display: grid; place-items: center; padding: 24px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
       position: relative; z-index: 1;
       transition: background 0.6s, color 0.4s;
     }
@@ -186,6 +186,30 @@
     .toggle-track.star-on .toggle-knob { transform: translateX(30px); background: var(--accent); }
 
     @media (max-width: 560px) { .select-row { grid-template-columns: 1fr; } .shell { padding: 22px; } }
+
+    /* ── 更新日志 ── */
+    .changelog { margin-top: 28px; border-top: 1px solid var(--panel-border); padding-top: 20px; }
+    .changelog h2 { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em; color: var(--text-soft); margin: 0 0 14px; text-transform: uppercase; }
+    .changelog-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; max-height: calc(5 * 52px); overflow-y: auto; padding-right: 6px; scroll-behavior: smooth; }
+    .changelog-list::-webkit-scrollbar { width: 4px; }
+    .changelog-list::-webkit-scrollbar-track { background: transparent; }
+    .changelog-list::-webkit-scrollbar-thumb { background: rgba(140,180,255,0.25); border-radius: 4px; }
+    .changelog-list::-webkit-scrollbar-thumb:hover { background: rgba(140,180,255,0.5); }
+    .changelog-list li { display: flex; gap: 12px; align-items: flex-start; font-size: 0.82rem; line-height: 1.5; }
+    .cl-date { flex-shrink: 0; font-size: 0.75rem; color: var(--text-soft); padding-top: 1px; min-width: 80px; }
+    .cl-badge { flex-shrink: 0; font-size: 0.68rem; font-weight: 700; padding: 1px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .cl-badge.new  { background: rgba(56,189,140,0.18); color: #38bd8c; }
+    .cl-badge.fix  { background: rgba(255,180,50,0.18);  color: #f0a830; }
+    .cl-badge.sec  { background: rgba(100,160,255,0.18); color: #70a8ff; }
+    .cl-text { color: var(--text-main); }
+    body.classic-mode .changelog { border-top-color: rgba(78,93,117,0.15); }
+    body.classic-mode .changelog-list::-webkit-scrollbar-thumb { background: rgba(78,93,117,0.25); }
+    body.classic-mode .changelog-list::-webkit-scrollbar-thumb:hover { background: rgba(78,93,117,0.45); }
+    body.classic-mode .cl-badge.new { background: rgba(13,110,80,0.12); color: #0a7c58; }
+    body.classic-mode .cl-badge.fix { background: rgba(180,120,0,0.12);  color: #9a6200; }
+    body.classic-mode .cl-badge.sec { background: rgba(0,80,200,0.10);   color: #2255bb; }
+    body.classic-mode .cl-text { color: #1c2a38; }
+    body.classic-mode .cl-date  { color: #6e7f92; }
 </style>
 </head>
 <body class="classic-mode">
@@ -249,6 +273,48 @@
         </div>
       </div>
     </section>
+
+  <!-- 更新日志 -->
+  <section class="changelog">
+    <h2>更新日志 <span style="font-size:0.72rem;font-weight:400;opacity:0.55;letter-spacing:0.02em;">made by BR 與 GPT 4.6</span></h2>
+    <ul class="changelog-list">
+      <li>
+        <span class="cl-date">2026-04-26</span>
+        <span class="cl-badge sec">安全</span>
+        <span class="cl-text">強化網站防護：新增 CSP 內容安全策略、所有連結加入防 Referer 洩漏設定、外部網址開啟前自動驗證格式</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-26</span>
+        <span class="cl-badge fix">修正</span>
+        <span class="cl-text">修正網站名稱、連結文字未做 HTML 跳脫，防止潛在的 XSS 注入風險</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-26</span>
+        <span class="cl-badge new">新增</span>
+        <span class="cl-text">開始更新日誌</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-25</span>
+        <span class="cl-badge new">新增</span>
+        <span class="cl-text">加入星空背景動畫，支援原版 / 星空主題一鍵切換（右上角開關）</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-25</span>
+        <span class="cl-badge fix">修正</span>
+        <span class="cl-text">預設為原版模式時星空不再閃現；切回原版後動畫正確停止，降低 CPU 用量</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-24</span>
+        <span class="cl-badge new">新增</span>
+        <span class="cl-text">標題預覽支援縮圖顯示，圖片來源限制白名單，防止載入惡意圖片</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-23</span>
+        <span class="cl-badge new">新增</span>
+        <span class="cl-text">整合 Yahoo 奇摩新聞、Google 新聞、證交所三大來源，支援主題快速切換</span>
+      </li>
+    </ul>
+  </section>
   </main>
   <script>
   /* ── 星空 Canvas 動畫 ── */
@@ -510,6 +576,19 @@
         setStatus("瀏覽器不允許自動複製，請手動複製網址。", "is-warning");
       }
     });
+
+    // 更新日誌依日期排序（最新在上）
+    (function () {
+      const list = document.querySelector(".changelog-list");
+      if (!list) return;
+      const items = Array.from(list.querySelectorAll("li"));
+      items.sort((a, b) => {
+        const da = a.querySelector(".cl-date")?.textContent ?? "";
+        const db = b.querySelector(".cl-date")?.textContent ?? "";
+        return db.localeCompare(da);
+      });
+      items.forEach(li => list.appendChild(li));
+    })();
   </script>
 </body>
 </html>
