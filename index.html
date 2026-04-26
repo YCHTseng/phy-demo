@@ -280,6 +280,11 @@
     <ul class="changelog-list">
       <li>
         <span class="cl-date">2026-04-26</span>
+        <span class="cl-badge fix">修正</span>
+        <span class="cl-text">修正切換至原版模式後再切回星空時，流星大量集中爆發的問題</span>
+      </li>
+      <li>
+        <span class="cl-date">2026-04-26</span>
         <span class="cl-badge sec">安全</span>
         <span class="cl-text">強化網站防護：新增 CSP 內容安全策略、所有連結加入防 Referer 洩漏設定、外部網址開啟前自動驗證格式</span>
       </li>
@@ -362,7 +367,7 @@
       }
       requestAnimationFrame(draw);
     }
-    function scheduleShoot() { spawnShootingStar(); setTimeout(scheduleShoot, Math.random()*4500+2500); }
+    function scheduleShoot() { if (animRunning) spawnShootingStar(); setTimeout(scheduleShoot, Math.random()*4500+2500); }
     resize(); initStars(); scheduleShoot();
     // draw() 由 applyTheme() 決定是否啟動
     window.addEventListener('resize', () => { resize(); initStars(); });
@@ -386,6 +391,7 @@
         track.classList.remove('star-on');
         lblC.classList.add('active'); lblS.classList.remove('active');
         animRunning = false;
+        shootingStars = [];
       }
     }
     track.style.cursor = 'pointer';
