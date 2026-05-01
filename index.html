@@ -138,6 +138,7 @@
     .headline-item a:hover { color: var(--accent); text-decoration: underline; }
     .headline-meta { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
     .preview-empty { color: var(--text-soft); font-size: 14px; padding: 8px 0; margin: 0; }
+    .preview-note  { color: var(--text-soft); font-size: 12px; margin: 0 0 8px; padding: 6px 8px; background: rgba(255,255,255,.05); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; }
     .preview-error  { color: #e09050; font-size: 14px; padding: 8px 0; margin: 0; }
     body.classic-mode .spinner { border-color: rgba(13,110,110,0.2); border-top-color: #0d6e6e; }
     body.classic-mode .headline-item { border-top-color: rgba(78,93,117,0.08); }
@@ -432,6 +433,17 @@
           { name: "上市公司",   url: "https://www.twse.com.tw/zh/listed/profile/company.html", rss: null },
           { name: "產品與服務", url: "https://www.twse.com.tw/zh/products/securities/stocks.html", rss: null }
         ]
+      },
+      bbc: {
+        name: "BBC 中文",
+        topics: [
+          { name: "國際", url: "https://www.bbc.com/zhongwen/topics/c83plve5vmjt/trad", rss: "https://feeds.bbci.co.uk/zhongwen/trad/rss.xml", keywords: ['國際','美國','俄羅斯','歐盟','總統','首相','烏克蘭','以色列','伊朗','北韓','印度','日本','韓國','法國','德國','加拿大','澳洲','北約','全球','世界'] },
+          { name: "中國", url: "https://www.bbc.com/zhongwen/topics/ckr7mn6r003t/trad", rss: "https://feeds.bbci.co.uk/zhongwen/trad/rss.xml", keywords: ['中國','北京','習近平','中共','上海','廣州','深圳','大陸','解放軍','政治局','委員會','中華人民共和國'] },
+          { name: "香港", url: "https://www.bbc.com/zhongwen/topics/cezw73jk755t/trad", rss: "https://feeds.bbci.co.uk/zhongwen/trad/rss.xml", keywords: ['香港','港府','港人','特首','立法會','國安法','港元','粵港澳'] },
+          { name: "台灣", url: "https://www.bbc.com/zhongwen/topics/cd6qem06z92t/trad", rss: "https://feeds.bbci.co.uk/zhongwen/trad/rss.xml", keywords: ['台灣','台北','台積電','賴清德','兩岩','民進黨','國民黨','台灣海峽'] },
+          { name: "英國", url: "https://www.bbc.com/zhongwen/topics/c1ez1k4emn0t/trad", rss: "https://feeds.bbci.co.uk/zhongwen/trad/rss.xml", keywords: ['英國','倫敦','英格蘭','蘇格蘭','威爾斯','英鄶','脱歐','唐實街','工黨','保守黨'] },
+          { name: "財經", url: "https://www.bbc.com/zhongwen/topics/cq8nqywy37yt/trad", rss: "https://feeds.bbci.co.uk/zhongwen/trad/rss.xml", keywords: ['財經','經濟','股市','貿易','投資','金融','通膟','關稅','貿易戰','央行','利率','GDP','市場','企業','財報'] }
+        ]
       }
     };
 
@@ -455,7 +467,7 @@
     const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     const safeUrl = s => /^https?:\/\//i.test(s) ? s : "#";
 
-    const loadPreview = (rssUrl, topicName, siteName) => {
+    const loadPreview = (rssUrl, topicName, siteName, keywords = null) => {
       previewCard.style.display = "";
       previewLabel.textContent = siteName + " ▸ " + topicName + "　標題預覽";
       if (!rssUrl) {
@@ -464,12 +476,25 @@
       }
       previewArea.innerHTML = "<div class='preview-loading'><span class='spinner'></span>載入中…</div>";
       const apiUrl = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(rssUrl);
-      fetch(apiUrl)
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      fetch(apiUrl, { signal: ctrl.signal })
         .then(r => r.json())
         .then(data => {
+          clearTimeout(timer);
           if (data.status !== "ok" || !data.items?.length) throw new Error("empty");
-          const items = data.items.slice(0, 4);
-          const html = "<ul class='headline-list'>" + items.map(item => {
+          let items = data.items;
+          if (keywords && keywords.length) {
+            const filtered = items.filter(item =>
+              keywords.some(kw => ((item.title ?? "") + (item.description ?? "")).includes(kw))
+            );
+            if (!filtered.length) {
+              previewArea.innerHTML = "<p class='preview-note'>※ 今日 BBC 最新 10 則中無此分類相關新聞，點「開啟網站」可進入對應分類頁面。</p>";
+              return;
+            }
+            items = filtered;
+          }
+          const html = "<ul class='headline-list'>" + items.slice(0, 4).map(item => {
             const title = item.title ?? "";
             const link  = item.link ?? "#";
             const pub   = item.pubDate;
@@ -483,12 +508,14 @@
           }).join("") + "</ul>";
           previewArea.innerHTML = html;
         })
-        .catch(() => {
-          previewArea.innerHTML = "<p class='preview-error'>暫時無法載入標題，請直接開啟網站。</p>";
+        .catch(err => {
+          clearTimeout(timer);
+          const msg = err?.name === "AbortError" ? "載入逾時，請稍後再試或直接開啟網站。" : "暫時無法載入標題，請直接開啟網站。";
+          previewArea.innerHTML = "<p class='preview-error'>" + msg + "</p>";
         });
     };
 
-    const activateChip = (chip, url, topicName, siteName, rssUrl) => {
+    const activateChip = (chip, url, topicName, siteName, rssUrl, keywords = null) => {
       if (activeChip) activeChip.classList.remove("active");
       chip.classList.add("active");
       activeChip = chip;
@@ -496,7 +523,7 @@
       openButton.disabled = false;
       copyButton.disabled = false;
       setStatus("已選取：" + siteName + " ▸ " + topicName, "is-success");
-      loadPreview(rssUrl, topicName, siteName);
+      loadPreview(rssUrl, topicName, siteName, keywords);
     };
 
     const renderTopics = (siteId) => {
@@ -516,12 +543,12 @@
       site.topics.forEach(t => {
         const chip = document.createElement("button");
         chip.type = "button"; chip.className = "chip"; chip.textContent = t.name;
-        chip.addEventListener("click", () => activateChip(chip, t.url, t.name, site.name, t.rss));
+        chip.addEventListener("click", () => activateChip(chip, t.url, t.name, site.name, t.rss, t.keywords ?? null));
         topicBar.appendChild(chip);
       });
       // 重繪詳細表格
       const rows = site.topics.map(t =>
-        "<tr><td><span class='t-tag'>" + t.name + "</span></td>" +
+        "<tr><td><span class='t-tag'>" + esc(t.name) + "</span></td>" +
         "<td><a href='" + esc(safeUrl(t.url)) + "' target='_blank' rel='noopener noreferrer' referrerpolicy='no-referrer'>" + esc(t.url) + "</a></td></tr>"
       ).join("");
       detailArea.innerHTML =
@@ -558,7 +585,7 @@
       });
       openButton.disabled = false; copyButton.disabled = false;
       setStatus("已選取：" + site.name + " ▸ " + (topic?.name ?? url), "is-success");
-      loadPreview(topic?.rss ?? null, topic?.name ?? url, site.name);
+      loadPreview(topic?.rss ?? null, topic?.name ?? url, site.name, topic?.keywords ?? null);
     });
 
     openButton.addEventListener("click", () => {
