@@ -140,6 +140,14 @@
     .preview-empty { color: var(--text-soft); font-size: 14px; padding: 8px 0; margin: 0; }
     .preview-note  { color: var(--text-soft); font-size: 12px; margin: 0 0 8px; padding: 6px 8px; background: rgba(255,255,255,.05); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; }
     .preview-error  { color: #e09050; font-size: 14px; padding: 8px 0; margin: 0; }
+    .preview-search-row { margin: 8px 0 10px; }
+    #preview-search { width: 100%; box-sizing: border-box; background: rgba(255,255,255,.06); border: 1px solid rgba(140,180,255,0.2); border-radius: 8px; padding: 7px 12px; font-size: 13px; color: var(--text-main); outline: none; transition: border-color 0.2s; }
+    #preview-search::placeholder { color: var(--text-soft); }
+    #preview-search:focus { border-color: var(--accent); }
+    mark.kw { background: rgba(91,200,200,0.3); color: var(--text-main); border-radius: 3px; padding: 0 2px; }
+    body.classic-mode #preview-search { background: rgba(247,250,252,0.96); color: #1c2a38; border-color: rgba(78,93,117,0.22); }
+    body.classic-mode #preview-search::placeholder { color: #8a9aaa; }
+    body.classic-mode mark.kw { background: rgba(13,110,110,0.2); color: #084d4d; }
     body.classic-mode .spinner { border-color: rgba(13,110,110,0.2); border-top-color: #0d6e6e; }
     body.classic-mode .headline-item { border-top-color: rgba(78,93,117,0.08); }
     body.classic-mode .headline-item a { color: #1c2a38; }
@@ -265,6 +273,9 @@
       <!-- 標題預覽 -->
       <div class="card" id="preview-card" style="display:none">
         <label id="preview-label">標題預覽</label>
+        <div class="preview-search-row">
+          <input type="search" id="preview-search" placeholder="在此輸入關鍵字篩選標題…" autocomplete="off">
+        </div>
         <div id="preview-area"></div>
       </div>
       <!-- 詳細連結表格 -->
@@ -460,10 +471,40 @@
     const copyButton  = document.getElementById("copy-button");
     const statusEl    = document.getElementById("status");
     const detailArea   = document.getElementById("detail-area");
-    const previewCard  = document.getElementById("preview-card");
-    const previewArea  = document.getElementById("preview-area");
-    const previewLabel = document.getElementById("preview-label");
+    const previewCard   = document.getElementById("preview-card");
+    const previewArea   = document.getElementById("preview-area");
+    const previewLabel  = document.getElementById("preview-label");
+    const previewSearch = document.getElementById("preview-search");
     let activeChip = null;
+    let currentItems = [];
+
+    const highlight = (raw, kw) => {
+      if (!kw) return esc(raw);
+      const re = new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      let out = '', last = 0, m;
+      while ((m = re.exec(raw)) !== null) {
+        out += esc(raw.slice(last, m.index)) + "<mark class='kw'>" + esc(m[0]) + "</mark>";
+        last = m.index + m[0].length;
+      }
+      return out + esc(raw.slice(last));
+    };
+
+    const renderItems = (items, kw = "") => {
+      const show = kw ? items.filter(i => (i.title ?? "").toLowerCase().includes(kw.toLowerCase())) : items.slice(0, 4);
+      if (!show.length) {
+        previewArea.innerHTML = "<p class='preview-note'>※ 沒有符合「" + esc(kw) + "」的標題，請嘗試其他關鍵字。</p>";
+        return;
+      }
+      const isImgUrl = s => /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)/i.test(s) || /\/\/(s\.yimg\.com|media\.zenfs\.com)\//i.test(s);
+      previewArea.innerHTML = "<ul class='headline-list'>" + show.map(item => {
+        const title = item.title ?? "", link = item.link ?? "#";
+        const _d = item.pubDate ? new Date(item.pubDate) : null;
+        const date = (_d && !isNaN(_d) && _d.getFullYear() > 2000) ? _d.toLocaleDateString("zh-TW") : "";
+        const thumb = (item.content && isImgUrl(item.content) ? item.content : "") || (item.thumbnail && isImgUrl(item.thumbnail) ? item.thumbnail : "") || (item.enclosure && item.enclosure.link && (item.enclosure.type || "").startsWith("image") ? item.enclosure.link : "");
+        const imgHtml = thumb ? "<img class='headline-cover' src='" + esc(safeUrl(thumb)) + "' alt='' loading='lazy' onerror=\"this.style.display='none'\">" : "";
+        return "<li class='headline-item'>" + imgHtml + "<div class='headline-text'><a href='" + esc(safeUrl(link)) + "' target='_blank' rel='noopener noreferrer' referrerpolicy='no-referrer'>" + highlight(title, kw) + "</a>" + (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</div></li>";
+      }).join("") + "</ul>";
+    };
 
     const setStatus = (msg, kind = "") => {
       statusEl.textContent = msg;
@@ -474,6 +515,7 @@
     const safeUrl = s => /^https?:\/\//i.test(s) ? s : "#";
 
     const loadPreview = (rssUrl, topicName, siteName, keywords = null) => {
+      currentItems = []; previewSearch.value = "";
       previewCard.style.display = "";
       previewLabel.textContent = siteName + " ▸ " + topicName + "　標題預覽";
       if (!rssUrl) {
@@ -500,19 +542,8 @@
             }
             items = filtered;
           }
-          const html = "<ul class='headline-list'>" + items.slice(0, 4).map(item => {
-            const title = item.title ?? "";
-            const link  = item.link ?? "#";
-            const pub   = item.pubDate;
-            const _d    = pub ? new Date(pub) : null;
-            const date  = (_d && !isNaN(_d) && _d.getFullYear() > 2000) ? _d.toLocaleDateString("zh-TW") : "";
-            const isImgUrl = s => /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)/i.test(s) || /\/\/(s\.yimg\.com|media\.zenfs\.com)\//i.test(s);
-            const thumb = (item.content && isImgUrl(item.content) ? item.content : "") || (item.thumbnail && isImgUrl(item.thumbnail) ? item.thumbnail : "") || (item.enclosure && item.enclosure.link && (item.enclosure.type || "").startsWith("image") ? item.enclosure.link : "");
-            const imgHtml = thumb ? "<img class='headline-cover' src='" + esc(safeUrl(thumb)) + "' alt='' loading='lazy' onerror=\"this.style.display='none'\">" : "";
-            return "<li class='headline-item'>" + imgHtml + "<div class='headline-text'><a href='" + esc(safeUrl(link)) + "' target='_blank' rel='noopener noreferrer' referrerpolicy='no-referrer'>" + esc(title) + "</a>" +
-              (date ? "<div class='headline-meta'>" + date + "</div>" : "") + "</div></li>";
-          }).join("") + "</ul>";
-          previewArea.innerHTML = html;
+          currentItems = items;
+          renderItems(items, "");
         })
         .catch(err => {
           clearTimeout(timer);
@@ -614,6 +645,11 @@
       } catch {
         setStatus("瀏覽器不允許自動複製，請手動複製網址。", "is-warning");
       }
+    });
+
+    previewSearch.addEventListener("input", () => {
+      if (!currentItems.length) return;
+      renderItems(currentItems, previewSearch.value.trim());
     });
 
     // 更新日誌依日期排序（最新在上）
